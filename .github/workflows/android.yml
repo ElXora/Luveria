@@ -35,11 +35,16 @@ jobs:
           allow_forks: false
 
       - name: Get JRE21
-        run: |
-          mkdir -p app_pojavlauncher/src/main/assets/components/jre-21
-          wget -q "https://nightly.link/PojavLauncherTeam/android-openjdk-build-multiarch/workflows/build/buildjre17-21/jre21-pojav.zip" -O jre21.zip
-          unzip -q jre21.zip -d app_pojavlauncher/src/main/assets/components/jre-21
-          rm jre21.zip
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: build.yml
+          path: app_pojavlauncher/src/main/assets/components/jre-21
+          workflow_conclusion: success
+          repo: PojavLauncherTeam/android-openjdk-build-multiarch
+          branch: buildjre17-21
+          name: jre21-pojav
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: gradle/actions/setup-gradle@v4
         with:
