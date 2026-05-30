@@ -34,17 +34,6 @@ jobs:
           path: app_pojavlauncher/libs
           allow_forks: false
 
-      - name: Get JRE21
-        continue-on-error: true
-        uses: dawidd6/action-download-artifact@v9
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre-21
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre17-21
-          name: jre21-pojav
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -73,16 +62,9 @@ jobs:
           gradle :app_pojavlauncher:assembleDebug
           mv app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk out/app-debug.apk
 
-      - name: Build APK without runtime
-        run: |
-          rm -rf app_pojavlauncher/src/main/assets/components/jre-21
-          gradle assembleDebug
-          mv app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk out/app-debug-noruntime.apk
-
       - name: Gen md5sums
         run: |
           md5sum out/app-debug.apk > out/app-debug.md5
-          md5sum out/app-debug-noruntime.apk > out/app-debug-noruntime.md5
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -107,9 +89,3 @@ jobs:
           releaseFiles: out/app-gplay.aab
           track: internal
           inAppUpdatePriority: 5
-
-      - name: Upload APK (without runtime)
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-noruntime
-          path: out/app-debug-noruntime.*
