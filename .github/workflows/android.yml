@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Get LTW
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v9
         continue-on-error: true
         with:
           github_token: ${{ secrets.LTW_CLONER_SECRET }}
@@ -35,24 +35,18 @@ jobs:
           allow_forks: false
 
       - name: Get JRE17
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre-new
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre17-21
-          name: jre17-pojav
+        run: |
+          mkdir -p app_pojavlauncher/src/main/assets/components/jre-new
+          wget -q "https://nightly.link/PojavLauncherTeam/android-openjdk-build-multiarch/workflows/build/buildjre17-21/jre17-pojav.zip" -O jre17.zip
+          unzip -q jre17.zip -d app_pojavlauncher/src/main/assets/components/jre-new
+          rm jre17.zip
 
       - name: Get JRE21
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre-21
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre17-21
-          name: jre21-pojav
+        run: |
+          mkdir -p app_pojavlauncher/src/main/assets/components/jre-21
+          wget -q "https://nightly.link/PojavLauncherTeam/android-openjdk-build-multiarch/workflows/build/buildjre17-21/jre21-pojav.zip" -O jre21.zip
+          unzip -q jre21.zip -d app_pojavlauncher/src/main/assets/components/jre-21
+          rm jre21.zip
 
       - uses: gradle/actions/setup-gradle@v4
         with:
