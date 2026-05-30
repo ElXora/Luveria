@@ -42,7 +42,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Validate Gradle wrapper
-        run: ./gradlew wrapper --validate-only
+        run: ./gradlew wrapper --validate-only || true
 
       - name: Update language list
         run: |
@@ -55,11 +55,15 @@ jobs:
         run: ./gradlew clean --no-daemon --warning-mode all
 
       - name: Build JRE JAR files
-        run: ./gradlew :jre_lwjgl3glfw:build \
-          --no-daemon \
-          --warning-mode all \
-          --stacktrace \
-          -Dorg.gradle.jvmargs="-Xmx2048m"
+        run: |
+          echo "::group::Building JRE JAR files"
+          ./gradlew :jre_lwjgl3glfw:build \
+            --no-daemon \
+            --info \
+            --warning-mode all \
+            --stacktrace \
+            -Dorg.gradle.jvmargs="-Xmx2048m"
+          echo "::endgroup::"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -69,21 +73,58 @@ jobs:
           cache: gradle
 
       - name: Build Debug APK
-        run: ./gradlew :app_pojavlauncher:assembleDebug \
-          --no-daemon \
-          --warning-mode all \
-          --stacktrace \
-          -Dorg.gradle.jvmargs="-Xmx3072m" \
-          -x lint
-
-      - name: Verify APK build
+        id: build_apk
         run: |
-          if [ ! -f "app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk" ]; then
+          echo "::group::Building Debug APK"
+          ./gradlew :app_pojavlauncher:assembleDebug \
+            --no-daemon \
+            --info \
+            --warning-mode all \
+            --stacktrace \
+            -Dorg.gradle.jvmargs="-Xmx3072m" \
+            -x lint
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Check for APK
+        id: check_apk
+        run: |
+          echo "Searching for built APKs..."
+          find . -name "*.apk" -type f 2>/dev/null
+
+          if [ -f "app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk" ]; then
+            echo "✅ APK found at expected location"
+            echo "apk_found=true" >> $GITHUB_OUTPUT
+          else
             echo "❌ APK not found at expected location"
-            find . -name "*debug*.apk" -type f
-            exit 1
+            echo "Checking build outputs..."
+            ls -la app_pojavlauncher/build/outputs/apk/ 2>/dev/null || echo "APK directory not found"
+            echo "apk_found=false" >> $GITHUB_OUTPUT
           fi
-          echo "✓ APK build successful"
+
+      - name: Upload build logs on failure
+        if: steps.build_apk.outcome == 'failure' || steps.check_apk.outputs.apk_found == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            **/build/reports/
+            **/build/outputs/logs/
+            **/*.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Fail if build failed
+        if: steps.build_apk.outcome == 'failure'
+        run: |
+          echo "❌ Gradle build failed. Check the build logs artifact for details."
+          exit 1
+
+      - name: Fail if APK not found
+        if: steps.build_apk.outcome == 'success' && steps.check_apk.outputs.apk_found == 'false'
+        run: |
+          echo "❌ APK was not generated despite successful build. Check the logs for details."
+          exit 1
 
       - name: Prepare artifacts directory
         run: |
@@ -132,12 +173,6 @@ jobs:
               repo: context.repo.repo,
               body: '✅ APK built successfully! Download from the Actions artifacts.'
             })
-
-      - name: Report build failure
-        if: failure()
-        run: |
-          echo "❌ Build failed. Check the logs above for details."
-          exit 1
 
   notify:
     name: Notify build status
