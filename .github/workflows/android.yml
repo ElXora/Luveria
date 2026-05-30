@@ -22,12 +22,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 8
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '8'
-
       - name: Get LTW
         uses: dawidd6/action-download-artifact@v3
         continue-on-error: true
@@ -39,16 +33,6 @@ jobs:
           name: output-aar
           path: app_pojavlauncher/libs
           allow_forks: false
-
-      - name: Get JRE 8
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre8
-          name: jre8-pojav
 
       - name: Get JRE17
         uses: dawidd6/action-download-artifact@v3
@@ -99,7 +83,6 @@ jobs:
 
       - name: Build APK without runtime
         run: |
-          rm -rf app_pojavlauncher/src/main/assets/components/jre
           rm -rf app_pojavlauncher/src/main/assets/components/jre-new
           rm -rf app_pojavlauncher/src/main/assets/components/jre-21
           gradle assembleDebug
