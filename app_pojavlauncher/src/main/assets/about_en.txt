@@ -1,0 +1,8 @@
+Luveria — Minecraft Java Launcher for Android<br>
+<br>
+* License:<br>
+ • This application is based on PojavLauncher, licensed under <a href="https://github.com/PojavLauncherTeam/PojavLauncher/blob/master/LICENSE">GNU GPLv3</a>.<br>
+<br>
+* Credits:<br>
+ • Original PojavLauncher project by Tran Khanh Duy and the PojavLauncher Team<br>
+ • Luveria theme &amp; Mods UI by @MrAwo69<br>
