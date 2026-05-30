@@ -18,10 +18,10 @@ jobs:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up JDK 8
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '8'
@@ -38,35 +38,17 @@ jobs:
           path: app_pojavlauncher/libs
           allow_forks: false
 
-      - name: Get JRE 8
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre8
-          name: jre8-pojav
+      - name: Skip JRE 8
+        run: |
+          mkdir -p app_pojavlauncher/src/main/assets/components/jre
 
-      - name: Get JRE17
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre-new
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre17-21
-          name: jre17-pojav
+      - name: Skip JRE17
+        run: |
+          mkdir -p app_pojavlauncher/src/main/assets/components/jre-new
 
-      - name: Get JRE21
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre-21
-          workflow_conclusion: success
-          repo: PojavLauncherTeam/android-openjdk-build-multiarch
-          branch: buildjre17-21
-          name: jre21-pojav
+      - name: Skip JRE21
+        run: |
+          mkdir -p app_pojavlauncher/src/main/assets/components/jre-21
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -81,7 +63,7 @@ jobs:
           gradle :jre_lwjgl3glfw:build --no-daemon
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -100,9 +82,9 @@ jobs:
 
       - name: Build APK without runtime
         run: |
-          rm -r app_pojavlauncher/src/main/assets/components/jre
-          rm -r app_pojavlauncher/src/main/assets/components/jre-new
-          rm -r app_pojavlauncher/src/main/assets/components/jre-21
+          rm -rf app_pojavlauncher/src/main/assets/components/jre || true
+          rm -rf app_pojavlauncher/src/main/assets/components/jre || true-new
+          rm -rf app_pojavlauncher/src/main/assets/components/jre || true-21
           gradle assembleDebug
           mv app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk out/app-debug-noruntime.apk
       - name: Gen md5sums
@@ -111,13 +93,13 @@ jobs:
           md5sum out/app-debug-noruntime.apk > out/app-debug-noruntime.md5
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: app-debug
           path: out/app-debug.*
 
       - name: Upload AAB
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: app-release-aab
           path: out/app-gplay.aab
@@ -134,7 +116,7 @@ jobs:
           inAppUpdatePriority: 5
 
       - name: Upload APK (without runtime)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: app-debug-noruntime
           path: out/app-debug-noruntime.*
